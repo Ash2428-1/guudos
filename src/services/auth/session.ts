@@ -93,6 +93,13 @@ export async function requireManagement(): Promise<SessionContext> {
   return ctx;
 }
 
+/** Require an owner (Central Lead), else bounce home. */
+export async function requireOwner(): Promise<SessionContext> {
+  const ctx = await requireSession();
+  if (ctx.role !== 'owner') redirect('/');
+  return ctx;
+}
+
 /** Require a specific capability, else bounce home. */
 export async function requireCapability(
   capability: Capability,

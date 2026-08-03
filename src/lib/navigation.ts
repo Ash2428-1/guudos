@@ -135,7 +135,8 @@ export const MODULES: NavModule[] = [
     href: '/admin',
     icon: ShieldCheck,
     minRole: 'owner',
-    enabled: false,
+    inNav: true,
+    enabled: true,
     description: 'Org, regions, mobiles & people',
   },
 ];
