@@ -70,7 +70,7 @@ export const MODULES: NavModule[] = [
     icon: Ticket,
     minRole: 'supervisor',
     inNav: true,
-    enabled: false,
+    enabled: true,
     description: 'Issues raised across your mobiles',
   },
   {
