@@ -71,8 +71,8 @@ export const MODULES: NavModule[] = [
     href: '/clock',
     icon: Clock,
     inNav: true,
-    enabled: false,
-    description: 'Clock in / out (Guud Pro)',
+    enabled: true,
+    description: 'Clock in / out of your shift',
   },
   {
     key: 'tickets',
@@ -99,7 +99,8 @@ export const MODULES: NavModule[] = [
     href: '/labour',
     icon: TrendingUp,
     capability: 'view_labour',
-    enabled: false,
+    inNav: true,
+    enabled: true,
     description: 'Lateness, hours & cost of labour',
   },
   {
