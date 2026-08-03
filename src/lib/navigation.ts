@@ -1,4 +1,5 @@
 import {
+  BarChart3,
   Boxes,
   ClipboardCheck,
   Clock,
@@ -44,6 +45,16 @@ export const MODULES: NavModule[] = [
     inNav: true,
     enabled: true,
     description: 'Your day at a glance',
+  },
+  {
+    key: 'overview',
+    label: 'Overview',
+    href: '/overview',
+    icon: BarChart3,
+    minRole: 'supervisor',
+    inNav: true,
+    enabled: true,
+    description: 'Completion & tickets across your mobiles',
   },
   {
     key: 'checklists',
