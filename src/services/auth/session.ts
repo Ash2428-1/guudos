@@ -69,10 +69,20 @@ export const getSessionContext = cache(
   },
 );
 
-/** Require a signed-in user with a membership, else send to /login. */
+/**
+ * Require a signed-in AND provisioned user.
+ *  - no auth user        → /login
+ *  - signed in, no membership → /welcome (avoids a redirect loop)
+ */
 export async function requireSession(): Promise<SessionContext> {
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+
   const ctx = await getSessionContext();
-  if (!ctx) redirect('/login');
+  if (!ctx) redirect('/welcome');
   return ctx;
 }
 
