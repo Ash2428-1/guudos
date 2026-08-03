@@ -1,0 +1,130 @@
+import {
+  Boxes,
+  ClipboardCheck,
+  Clock,
+  Eye,
+  Home,
+  LayoutDashboard,
+  type LucideIcon,
+  ShieldCheck,
+  Ticket,
+  TrendingUp,
+  CalendarClock,
+} from 'lucide-react';
+import { type Capability, type Role } from '@/lib/roles';
+
+/**
+ * Client-safe module registry. Drives the home tiles AND the nav bar/rail.
+ * Each module declares how it is gated; the shell filters on the resolved
+ * session context. `enabled: false` renders a "Coming soon" tile with no link
+ * so the build never ships dead routes.
+ */
+export interface NavModule {
+  key: string;
+  label: string;
+  href: string;
+  icon: LucideIcon;
+  /** Minimum role to see the tile (default 'staff'). */
+  minRole?: Role;
+  /** Capability required to see the tile. */
+  capability?: Capability;
+  /** Show in the bottom nav / left rail (vs home-tiles only). */
+  inNav?: boolean;
+  /** Built yet? */
+  enabled: boolean;
+  description: string;
+}
+
+export const MODULES: NavModule[] = [
+  {
+    key: 'home',
+    label: 'Home',
+    href: '/',
+    icon: Home,
+    inNav: true,
+    enabled: true,
+    description: 'Your day at a glance',
+  },
+  {
+    key: 'checklists',
+    label: 'Checklists',
+    href: '/checklists',
+    icon: ClipboardCheck,
+    inNav: true,
+    enabled: false, // ← first module to build
+    description: 'MUM & Operator checks; flagged items raise tickets',
+  },
+  {
+    key: 'clock',
+    label: 'Clock',
+    href: '/clock',
+    icon: Clock,
+    inNav: true,
+    enabled: false,
+    description: 'Clock in / out (Guud Pro)',
+  },
+  {
+    key: 'tickets',
+    label: 'Tickets',
+    href: '/tickets',
+    icon: Ticket,
+    minRole: 'supervisor',
+    inNav: true,
+    enabled: false,
+    description: 'Issues raised across your mobiles',
+  },
+  {
+    key: 'schedules',
+    label: 'Schedules',
+    href: '/schedules',
+    icon: CalendarClock,
+    minRole: 'supervisor',
+    enabled: false,
+    description: 'Deployments & staffing',
+  },
+  {
+    key: 'labour',
+    label: 'Labour',
+    href: '/labour',
+    icon: TrendingUp,
+    capability: 'view_labour',
+    enabled: false,
+    description: 'Lateness, hours & cost of labour',
+  },
+  {
+    key: 'assessments',
+    label: 'Assessments',
+    href: '/assessments',
+    icon: LayoutDashboard,
+    capability: 'view_assessments',
+    enabled: false,
+    description: 'Assessment trackers (Metabase)',
+  },
+  {
+    key: 'vision',
+    label: 'Vision',
+    href: '/vision',
+    icon: Eye,
+    capability: 'view_vision',
+    enabled: false,
+    description: 'Spectacles cut vs not cut',
+  },
+  {
+    key: 'stock',
+    label: 'Stock',
+    href: '/stock',
+    icon: Boxes,
+    capability: 'view_stock',
+    enabled: false,
+    description: 'Order stock (Unleashed)',
+  },
+  {
+    key: 'admin',
+    label: 'Admin',
+    href: '/admin',
+    icon: ShieldCheck,
+    minRole: 'owner',
+    enabled: false,
+    description: 'Org, regions, mobiles & people',
+  },
+];

@@ -1,0 +1,12 @@
+{
+  "name": "Guud OS",
+  "short_name": "Guud OS",
+  "description": "Operational app for Guud Mobility",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0b1220",
+  "theme_color": "#0e9f6e",
+  "icons": [
+    { "src": "/favicon.ico", "sizes": "48x48", "type": "image/x-icon" }
+  ]
+}

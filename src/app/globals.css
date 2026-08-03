@@ -1,0 +1,50 @@
+@import "tailwindcss";
+
+/* Class-based dark mode so the manual toggle (next-themes) controls it. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --background: #f8fafc;
+  --foreground: #0f172a;
+  --card: #ffffff;
+  --muted: #eef2f6;
+  --muted-foreground: #64748b;
+  --accent: #e6f4ee;
+  --border: #e2e8f0;
+  --primary: #0e9f6e; /* Guud health green */
+  --primary-foreground: #ffffff;
+  --destructive: #dc2626;
+}
+
+.dark {
+  --background: #0b1220;
+  --foreground: #e6edf5;
+  --card: #111a2b;
+  --muted: #1a2436;
+  --muted-foreground: #94a3b8;
+  --accent: #14301f;
+  --border: #1f2b3f;
+  --primary: #22c58a;
+  --primary-foreground: #06281c;
+  --destructive: #f87171;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-border: var(--border);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-destructive: var(--destructive);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+}
