@@ -1,12 +1,17 @@
 import { redirect } from 'next/navigation';
 import { createSupabaseServerClient } from '@/infrastructure/supabase/server';
+import { getSessionContext } from '@/services/auth/session';
 import { SignOutButton } from '@/features/auth/sign-out-button';
 
 /**
  * Landing for a signed-in user who has no membership yet. Sits OUTSIDE the
  * (app) group so it never triggers requireSession's membership redirect.
+ * Once the user IS provisioned, forward them straight to the home tiles.
  */
 export default async function WelcomePage() {
+  const ctx = await getSessionContext();
+  if (ctx) redirect('/');
+
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },
