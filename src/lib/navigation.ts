@@ -51,7 +51,7 @@ export const MODULES: NavModule[] = [
     href: '/checklists',
     icon: ClipboardCheck,
     inNav: true,
-    enabled: false, // ← first module to build
+    enabled: true,
     description: 'MUM & Operator checks; flagged items raise tickets',
   },
   {
