@@ -1,6 +1,8 @@
 import Link from 'next/link';
-import { ChevronLeft, ChevronRight, Pencil } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Mail, Pencil } from 'lucide-react';
 import { getReportBack } from '@/services/reports/service';
+import { getSessionContext } from '@/services/auth/session';
+import { sendReportsNowAction } from '@/features/reports/actions';
 import { addDays } from '@/domain/kpi/date-range';
 import { type DailyReportView } from '@/lib/reports';
 
@@ -84,10 +86,19 @@ function MobileReport({ r }: { r: DailyReportView }) {
 export default async function ReportsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ date?: string; saved?: string }>;
+  searchParams: Promise<{
+    date?: string;
+    saved?: string;
+    emailed?: string;
+    skipped?: string;
+  }>;
 }) {
   const sp = await searchParams;
-  const { date, mobiles } = await getReportBack(sp.date);
+  const [{ date, mobiles }, ctx] = await Promise.all([
+    getReportBack(sp.date),
+    getSessionContext(),
+  ]);
+  const isOwner = ctx?.role === 'owner';
 
   return (
     <div className="space-y-5">
@@ -115,9 +126,31 @@ export default async function ReportsPage({
         </div>
       </div>
 
+      {isOwner && (
+        <form action={sendReportsNowAction}>
+          <input type="hidden" name="date" value={date} />
+          <button
+            type="submit"
+            className="inline-flex items-center gap-2 rounded-md border border-border px-3 py-1.5 text-sm hover:bg-accent"
+          >
+            <Mail className="h-4 w-4" /> Email RMs this day&apos;s report now
+          </button>
+        </form>
+      )}
+
       {sp.saved && (
         <div className="rounded-lg border border-primary/40 bg-primary/10 p-3 text-sm">
           Report saved.
+        </div>
+      )}
+
+      {sp.emailed !== undefined && (
+        <div className="rounded-lg border border-primary/40 bg-primary/10 p-3 text-sm">
+          Sent {sp.emailed} report email{sp.emailed === '1' ? '' : 's'}
+          {sp.skipped && Number(sp.skipped) > 0
+            ? ` · ${sp.skipped} skipped (no email/mobiles, or email not configured)`
+            : ''}
+          .
         </div>
       )}
 

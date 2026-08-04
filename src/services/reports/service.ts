@@ -1,4 +1,5 @@
 import 'server-only';
+import { type SupabaseClient } from '@supabase/supabase-js';
 import { requireSession } from '@/services/auth/session';
 import { createSupabaseServerClient } from '@/infrastructure/supabase/server';
 import { listAccessibleMobiles } from '@/services/locations/service';
@@ -93,19 +94,24 @@ export interface ReportBack {
   mobiles: DailyReportView[];
 }
 
-/** Report-back for a day (defaults to yesterday) across the user's mobiles. */
-export async function getReportBack(date?: string): Promise<ReportBack> {
-  await requireSession();
-  const day = date && ISO_DATE.test(date) ? date : localDay(-1);
-  const supabase = await createSupabaseServerClient();
-
-  const mobiles = await listAccessibleMobiles();
+/**
+ * Assemble report views for a set of mobiles on a day. Works with any Supabase
+ * client — user-scoped for the UI, service-role for the cron email.
+ */
+export async function loadReportViews(
+  supabase: SupabaseClient,
+  mobiles: { id: string; name: string }[],
+  day: string,
+): Promise<DailyReportView[]> {
+  if (mobiles.length === 0) return [];
+  const ids = mobiles.map((m) => m.id);
   const [{ data: dayRows }, { data: histRows }] = await Promise.all([
-    supabase.from('daily_reports').select('*').eq('service_date', day),
+    supabase.from('daily_reports').select('*').eq('service_date', day).in('location_id', ids),
     supabase
       .from('daily_reports')
       .select('location_id, service_date, specs_no_stock')
-      .lte('service_date', day),
+      .lte('service_date', day)
+      .in('location_id', ids),
   ]);
 
   const byLoc = new Map(
@@ -122,7 +128,7 @@ export async function getReportBack(date?: string): Promise<ReportBack> {
     histByLoc.set(id, list);
   }
 
-  const views: DailyReportView[] = mobiles.map((m) => {
+  return mobiles.map((m) => {
     const r = byLoc.get(m.id);
     const fields = r ? mapFields(r) : EMPTY;
     return {
@@ -130,16 +136,20 @@ export async function getReportBack(date?: string): Promise<ReportBack> {
       locationName: m.name,
       date: day,
       hasReport: Boolean(r),
-      serviceMinutes: serviceDurationMinutes(
-        fields.startOfServices,
-        fields.endOfServices,
-      ),
+      serviceMinutes: serviceDurationMinutes(fields.startOfServices, fields.endOfServices),
       cumulativeBacklog: cumulativeBacklog(histByLoc.get(m.id) ?? [], day),
       ...fields,
     };
   });
+}
 
-  return { date: day, mobiles: views };
+/** Report-back for a day (defaults to yesterday) across the user's mobiles. */
+export async function getReportBack(date?: string): Promise<ReportBack> {
+  await requireSession();
+  const day = date && ISO_DATE.test(date) ? date : localDay(-1);
+  const supabase = await createSupabaseServerClient();
+  const mobiles = await listAccessibleMobiles();
+  return { date: day, mobiles: await loadReportViews(supabase, mobiles, day) };
 }
 
 export { localDay };
