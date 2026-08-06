@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { type ReactNode, useMemo } from 'react';
+import { UserCircle } from 'lucide-react';
 import { MODULES } from '@/lib/navigation';
 import { type Capability, type Role, ROLE_LABELS } from '@/lib/roles';
 import { visibleModules } from '@/domain/access/visible-modules';
@@ -42,13 +43,19 @@ export function AppShell({ role, capabilities, fullName, children }: AppShellPro
             {ROLE_LABELS[role]}
           </span>
         </div>
-        <div className="flex items-center gap-2">
-          {fullName && (
-            <span className="hidden text-sm text-muted-foreground sm:inline">
-              {fullName}
-            </span>
-          )}
+        <div className="flex items-center gap-3">
           <ThemeToggle />
+          <Link
+            href="/account"
+            aria-label="Account"
+            className={cn(
+              'flex items-center gap-2 rounded-md px-1 py-1 text-sm hover:text-foreground',
+              isActive('/account') ? 'text-foreground' : 'text-muted-foreground',
+            )}
+          >
+            {fullName && <span className="hidden sm:inline">{fullName}</span>}
+            <UserCircle className="h-5 w-5" />
+          </Link>
         </div>
       </header>
 
