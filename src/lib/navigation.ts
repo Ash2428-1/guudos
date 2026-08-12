@@ -129,7 +129,8 @@ export const MODULES: NavModule[] = [
     href: '/vision',
     icon: Eye,
     capability: 'view_vision',
-    enabled: false,
+    inNav: true,
+    enabled: true,
     description: 'Spectacles cut vs not cut',
   },
   {
