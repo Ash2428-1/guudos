@@ -182,3 +182,28 @@ export async function invitePerson(input: {
 
   return { userId: user.id, created };
 }
+
+// --- Crew roster ---------------------------------------------------------
+export interface CrewMember {
+  role: string;
+  name: string;
+}
+
+/** Crew grouped by mobile (location_id → members). */
+export async function listCrewByMobile(): Promise<Record<string, CrewMember[]>> {
+  await requireOwner();
+  const supabase = await createSupabaseServerClient();
+  const { data } = await supabase
+    .from('mobile_crew')
+    .select('location_id, role, name')
+    .order('role');
+  const map: Record<string, CrewMember[]> = {};
+  for (const r of (data ?? []) as Array<{
+    location_id: string;
+    role: string;
+    name: string;
+  }>) {
+    (map[r.location_id] ??= []).push({ role: r.role, name: r.name });
+  }
+  return map;
+}

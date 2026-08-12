@@ -1,5 +1,10 @@
 import { requireOwner } from '@/services/auth/session';
-import { listMobiles, listPeople, listRegions } from '@/services/admin/service';
+import {
+  listCrewByMobile,
+  listMobiles,
+  listPeople,
+  listRegions,
+} from '@/services/admin/service';
 import {
   createMobileAction,
   createRegionAction,
@@ -21,10 +26,11 @@ export default async function AdminPage({
   searchParams: Promise<Record<string, string | undefined>>;
 }) {
   await requireOwner();
-  const [regions, mobiles, people, sp] = await Promise.all([
+  const [regions, mobiles, people, crew, sp] = await Promise.all([
     listRegions(),
     listMobiles(),
     listPeople(),
+    listCrewByMobile(),
     searchParams,
   ]);
 
@@ -79,17 +85,35 @@ export default async function AdminPage({
       <section className="space-y-2">
         <h2 className="text-sm font-semibold text-muted-foreground">Mobiles</h2>
         <div className="space-y-1">
-          {mobiles.map((m) => (
-            <div
-              key={m.id}
-              className="flex items-center justify-between rounded-md border border-border bg-card px-3 py-2 text-sm"
-            >
-              <span>{m.name}</span>
-              <span className="text-xs text-muted-foreground">
-                {[m.code, m.regionName].filter(Boolean).join(' · ')}
-              </span>
-            </div>
-          ))}
+          {mobiles.map((m) => {
+            const members = crew[m.id] ?? [];
+            return (
+              <details key={m.id} className="rounded-md border border-border bg-card">
+                <summary className="flex cursor-pointer items-center justify-between px-3 py-2 text-sm">
+                  <span>{m.name}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {[m.code, m.regionName, members.length ? `${members.length} crew` : null]
+                      .filter(Boolean)
+                      .join(' · ')}
+                  </span>
+                </summary>
+                <div className="border-t border-border px-3 py-2">
+                  {members.length === 0 ? (
+                    <p className="text-xs text-muted-foreground">No crew listed.</p>
+                  ) : (
+                    <ul className="space-y-1">
+                      {members.map((c, i) => (
+                        <li key={i} className="flex justify-between text-xs">
+                          <span>{c.name}</span>
+                          <span className="text-muted-foreground">{c.role}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </details>
+            );
+          })}
         </div>
         <details className="rounded-lg border border-border bg-card">
           <summary className="cursor-pointer px-3 py-2 text-sm font-medium">+ Add mobile</summary>
