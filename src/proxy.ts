@@ -6,7 +6,9 @@ import { createServerClient } from '@supabase/ssr';
  * authenticated app. Public routes (auth screens, health, static assets) pass
  * through untouched. (Next 16 "proxy" convention — formerly middleware.)
  */
-const PUBLIC_PATHS = ['/login', '/auth', '/api/health'];
+// /api/cron/* is public to the proxy — those routes do their own CRON_SECRET
+// auth, and Vercel Cron requests carry no user session to gate on.
+const PUBLIC_PATHS = ['/login', '/auth', '/api/health', '/api/cron'];
 
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
