@@ -39,9 +39,11 @@ export async function invitePersonAction(formData: FormData) {
   const jobRaw = String(formData.get('jobFunction') ?? '');
   const regionId = String(formData.get('regionId') ?? '') || null;
   const mobileIds = formData.getAll('mobileIds').map(String).filter(Boolean);
+  const password = String(formData.get('password') ?? '').trim() || undefined;
 
   if (!email || !fullName) redirect('/admin?err=1');
   if (!(ROLES as readonly string[]).includes(role)) redirect('/admin?err=1');
+  if (password && password.length < 8) redirect('/admin?err=pw');
   const jobFunction = (JOB_FUNCTIONS as readonly string[]).includes(jobRaw)
     ? (jobRaw as JobFunction)
     : null;
@@ -53,6 +55,7 @@ export async function invitePersonAction(formData: FormData) {
     jobFunction,
     regionId,
     mobileIds,
+    password,
   });
   revalidatePath('/admin');
   redirect(`/admin?invited=${res.created ? 'new' : 'existing'}`);

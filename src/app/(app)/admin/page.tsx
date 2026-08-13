@@ -36,16 +36,18 @@ export default async function AdminPage({
 
   const banner =
     sp.invited === 'new'
-      ? 'Person added — they can sign in with their email now.'
+      ? 'Person added. If you set a password, give it to them — they sign in with email + password now.'
       : sp.invited === 'existing'
         ? 'Existing user updated and assigned.'
         : sp.created === 'region'
           ? 'Region created.'
           : sp.created === 'mobile'
             ? 'Mobile created.'
-            : sp.err
-              ? 'Please fill in the required fields.'
-              : null;
+            : sp.err === 'pw'
+              ? 'Password must be at least 8 characters.'
+              : sp.err
+                ? 'Please fill in the required fields.'
+                : null;
 
   return (
     <div className="space-y-6">
@@ -159,6 +161,13 @@ export default async function AdminPage({
           <form action={invitePersonAction} className="space-y-2 border-t border-border p-3">
             <input name="fullName" required placeholder="Full name" className={inputCls} />
             <input name="email" type="email" required placeholder="Email" className={inputCls} />
+            <input
+              name="password"
+              type="text"
+              autoComplete="off"
+              placeholder="Initial password (optional, 8+ chars) — hand it to them"
+              className={inputCls}
+            />
             <div className="grid grid-cols-2 gap-2">
               <select name="role" required className={inputCls} defaultValue="staff">
                 {ROLES.map((r) => (

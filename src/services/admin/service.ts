@@ -132,6 +132,8 @@ export async function invitePerson(input: {
   jobFunction: JobFunction | null;
   regionId: string | null;
   mobileIds: string[];
+  /** Optional initial password — owner sets it and hands it to the person. */
+  password?: string;
 }): Promise<{ userId: string; created: boolean }> {
   const ctx = await requireOwner();
   const admin = createSupabaseAdminClient();
@@ -151,6 +153,12 @@ export async function invitePerson(input: {
     if (error || !data.user) throw new Error(error?.message ?? 'Create user failed');
     user = data.user;
     created = true;
+  }
+
+  // Optional initial password (new or existing user) — lets people log in with
+  // email + password immediately, no reset email required.
+  if (input.password) {
+    await admin.auth.admin.updateUserById(user.id, { password: input.password });
   }
 
   await admin.from('profiles').upsert(
