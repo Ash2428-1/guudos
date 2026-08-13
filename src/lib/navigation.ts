@@ -120,7 +120,8 @@ export const MODULES: NavModule[] = [
     href: '/assessments',
     icon: LayoutDashboard,
     capability: 'view_assessments',
-    enabled: false,
+    inNav: true,
+    enabled: true,
     description: 'Assessment trackers (Metabase)',
   },
   {
