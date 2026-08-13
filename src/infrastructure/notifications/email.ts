@@ -1,13 +1,33 @@
 import 'server-only';
-import { Resend } from 'resend';
+import nodemailer, { type Transporter } from 'nodemailer';
 
-let client: Resend | null = null;
-function resend(): Resend | null {
-  if (client) return client;
-  const key = process.env.RESEND_API_KEY;
-  if (!key) return null;
-  client = new Resend(key);
-  return client;
+let transporter: Transporter | null = null;
+
+/**
+ * Provider-agnostic SMTP transport. Works with Brevo, SendGrid, Resend SMTP,
+ * etc. Configured entirely via env so switching providers is a config change,
+ * not a code change. Returns null (and callers skip) when unconfigured.
+ *
+ *   SMTP_HOST=smtp-relay.brevo.com
+ *   SMTP_PORT=587
+ *   SMTP_USER=<login>
+ *   SMTP_PASS=<smtp key>
+ *   EMAIL_FROM="Guud OS <ops@guudapp.co>"
+ */
+function getTransport(): Transporter | null {
+  if (transporter) return transporter;
+  const host = process.env.SMTP_HOST;
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASS;
+  if (!host || !user || !pass) return null;
+  const port = Number(process.env.SMTP_PORT ?? '587');
+  transporter = nodemailer.createTransport({
+    host,
+    port,
+    secure: port === 465, // 465 = implicit TLS; 587 = STARTTLS
+    auth: { user, pass },
+  });
+  return transporter;
 }
 
 export interface EmailMessage {
@@ -18,25 +38,21 @@ export interface EmailMessage {
 }
 
 /**
- * Send an email via Resend. Returns false (and warns) when unconfigured rather
- * than throwing, so callers in cron/report paths degrade gracefully.
+ * Send an email over SMTP. Returns false (and warns) when unconfigured rather
+ * than throwing, so cron/report paths degrade gracefully.
  */
 export async function sendEmail(msg: EmailMessage): Promise<boolean> {
-  const r = resend();
-  if (!r) {
-    console.warn('[email] RESEND_API_KEY not set — skipping send');
+  const t = getTransport();
+  if (!t) {
+    console.warn('[email] SMTP not configured — skipping send');
     return false;
   }
-  const from = msg.from ?? process.env.RESEND_FROM ?? 'Guud OS <ops@guudapp.co>';
-  const { error } = await r.emails.send({
-    from,
-    to: msg.to,
-    subject: msg.subject,
-    html: msg.html,
-  });
-  if (error) {
+  const from = msg.from ?? process.env.EMAIL_FROM ?? 'Guud OS <ops@guudapp.co>';
+  try {
+    await t.sendMail({ from, to: msg.to, subject: msg.subject, html: msg.html });
+    return true;
+  } catch (error) {
     console.error('[email] send failed', error);
     return false;
   }
-  return true;
 }
