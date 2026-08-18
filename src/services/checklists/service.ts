@@ -7,6 +7,7 @@ import {
   type ChecklistItemDef,
   type InstanceStatus,
   type ResponseValue,
+  type SelectOption,
 } from '@/lib/checklists';
 import { type JobFunction } from '@/lib/roles';
 
@@ -162,6 +163,8 @@ export async function getInstanceDetail(
     flagWhenFalse: r.flag_when_false as boolean,
     minValue: (r.min_value as number | null) ?? null,
     maxValue: (r.max_value as number | null) ?? null,
+    section: (r.section as string | null) ?? null,
+    options: (r.options as SelectOption[] | null) ?? null,
   }));
 
   const responses: Record<string, ResponseValue> = {};

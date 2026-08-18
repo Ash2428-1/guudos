@@ -12,6 +12,8 @@ const item = (over: Partial<ChecklistItemDef>): ChecklistItemDef => ({
   flagWhenFalse: true,
   minValue: null,
   maxValue: null,
+  section: null,
+  options: null,
   ...over,
 });
 
@@ -34,6 +36,19 @@ describe('evaluateFlag', () => {
 
   it('never flags text', () => {
     expect(evaluateFlag(item({ inputType: 'text' }), { valueText: 'anything' })).toBe(false);
+  });
+
+  it('flags a select when the chosen option is a flag option', () => {
+    const sel = item({
+      inputType: 'select',
+      options: [
+        { label: '✔️Operational', value: 'ok', flag: false },
+        { label: '❌Not operational', value: 'bad', flag: true },
+      ],
+    });
+    expect(evaluateFlag(sel, { valueText: 'bad' })).toBe(true);
+    expect(evaluateFlag(sel, { valueText: 'ok' })).toBe(false);
+    expect(evaluateFlag(sel, { valueText: 'unknown' })).toBe(false);
   });
 });
 

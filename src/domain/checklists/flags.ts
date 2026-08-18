@@ -12,6 +12,7 @@ export function isAnswered(
     case 'number':
       return r.valueNumber !== null && r.valueNumber !== undefined;
     case 'text':
+    case 'select':
       return Boolean(r.valueText && r.valueText.trim());
   }
 }
@@ -20,6 +21,7 @@ export function isAnswered(
  * Should this response be flagged (i.e. raise a ticket)?
  *  - bool:   flagged when answered "No" and the item flags on false
  *  - number: flagged when outside [minValue, maxValue]
+ *  - select: flagged when the chosen option is marked flag=true
  *  - text:   never auto-flagged (informational)
  */
 export function evaluateFlag(
@@ -36,6 +38,10 @@ export function evaluateFlag(
       if (item.minValue !== null && v < item.minValue) return true;
       if (item.maxValue !== null && v > item.maxValue) return true;
       return false;
+    }
+    case 'select': {
+      const opt = item.options?.find((o) => o.value === r.valueText);
+      return opt?.flag ?? false;
     }
     case 'text':
       return false;
