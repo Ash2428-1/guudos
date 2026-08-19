@@ -13,6 +13,7 @@ export function isAnswered(
       return r.valueNumber !== null && r.valueNumber !== undefined;
     case 'text':
     case 'select':
+    case 'photo':
       return Boolean(r.valueText && r.valueText.trim());
   }
 }
@@ -44,6 +45,7 @@ export function evaluateFlag(
       return opt?.flag ?? false;
     }
     case 'text':
+    case 'photo':
       return false;
   }
 }

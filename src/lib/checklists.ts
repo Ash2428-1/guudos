@@ -1,6 +1,6 @@
 /** Client-safe checklist types shared by domain, services and UI. */
 
-export type InputType = 'bool' | 'number' | 'text' | 'select';
+export type InputType = 'bool' | 'number' | 'text' | 'select' | 'photo';
 export type ChecklistFrequency = 'daily' | 'per_shift' | 'weekly' | 'monthly' | 'ad_hoc';
 export type InstanceStatus = 'pending' | 'in_progress' | 'completed';
 

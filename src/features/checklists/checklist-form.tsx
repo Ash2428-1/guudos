@@ -1,10 +1,13 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { submitChecklistAction } from '@/features/checklists/actions';
+import { createSupabaseBrowserClient } from '@/infrastructure/supabase/browser';
 import { type ChecklistItemDef, type ResponseValue } from '@/lib/checklists';
 import { cn } from '@/lib/utils';
+
+const PHOTO_BUCKET = 'checklist-photos';
 
 interface Props {
   instanceId: string;
@@ -18,8 +21,44 @@ export function ChecklistForm({ instanceId, items, initialResponses }: Props) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
+  const [previews, setPreviews] = useState<Record<string, string>>({});
+  const [uploading, setUploading] = useState<Record<string, boolean>>({});
+
   const set = (id: string, v: ResponseValue) =>
     setValues((prev) => ({ ...prev, [id]: { ...prev[id], ...v } }));
+
+  // Load previews for photos already attached (signed URLs, private bucket).
+  useEffect(() => {
+    const supabase = createSupabaseBrowserClient();
+    for (const i of items) {
+      if (i.inputType !== 'photo') continue;
+      const path = initialResponses[i.id]?.valueText;
+      if (!path) continue;
+      void supabase.storage
+        .from(PHOTO_BUCKET)
+        .createSignedUrl(path, 3600)
+        .then(({ data }) => {
+          if (data?.signedUrl) setPreviews((p) => ({ ...p, [i.id]: data.signedUrl }));
+        });
+    }
+  }, [items, initialResponses]);
+
+  async function uploadPhoto(item: ChecklistItemDef, file: File) {
+    const supabase = createSupabaseBrowserClient();
+    setError('');
+    setUploading((u) => ({ ...u, [item.id]: true }));
+    const path = `${instanceId}/${item.id}`;
+    const { error: upErr } = await supabase.storage
+      .from(PHOTO_BUCKET)
+      .upload(path, file, { upsert: true, contentType: file.type });
+    setUploading((u) => ({ ...u, [item.id]: false }));
+    if (upErr) {
+      setError(`Photo upload failed: ${upErr.message}`);
+      return;
+    }
+    set(item.id, { valueText: path });
+    setPreviews((p) => ({ ...p, [item.id]: URL.createObjectURL(file) }));
+  }
 
   async function onSubmit() {
     setBusy(true);
@@ -110,6 +149,34 @@ export function ChecklistForm({ instanceId, items, initialResponses }: Props) {
                           </button>
                         );
                       })}
+                    </div>
+                  )}
+
+                  {item.inputType === 'photo' && (
+                    <div className="space-y-2">
+                      {previews[item.id] && (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={previews[item.id]}
+                          alt="attached"
+                          className="max-h-48 rounded-md border border-border"
+                        />
+                      )}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        capture="environment"
+                        onChange={(e) => {
+                          const f = e.target.files?.[0];
+                          if (f) void uploadPhoto(item, f);
+                        }}
+                        className="block w-full text-sm text-muted-foreground file:mr-3 file:rounded-md file:border-0 file:bg-primary file:px-3 file:py-2 file:text-sm file:font-medium file:text-primary-foreground"
+                      />
+                      {uploading[item.id] ? (
+                        <p className="text-xs text-muted-foreground">Uploading…</p>
+                      ) : (
+                        v.valueText && <p className="text-xs text-primary">✓ Photo attached</p>
+                      )}
                     </div>
                   )}
 

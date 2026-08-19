@@ -77,7 +77,7 @@ function convert(schema) {
       const idf = (cfg.identifier ?? '').toLowerCase();
       const required = !!cfg.required;
 
-      if (['latlng', 'signature', 'file_upload', 'date'].includes(comp)) { skip(comp); continue; }
+      if (['latlng', 'signature', 'date'].includes(comp)) { skip(comp); continue; }
       if (comp === 'single_choice' && idf === 'vehicle') { skip('vehicle'); continue; }
       if (comp === 'string' && (idf.startsWith('wrike') || label.toLowerCase().includes('wrike'))) { skip('wrike-link'); continue; }
 
@@ -93,6 +93,8 @@ function convert(schema) {
           return { label: o.label, value, flag };
         });
         items.push({ ...base, input_type: 'select', options });
+      } else if (comp === 'file_upload') {
+        items.push({ ...base, input_type: 'photo' });
       } else if (comp === 'number') {
         items.push({ ...base, input_type: 'number', min_value: cfg.minValue ?? null, max_value: cfg.maxValue ?? null });
       } else if (comp === 'string') {
