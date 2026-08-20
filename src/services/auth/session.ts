@@ -5,6 +5,7 @@ import { createSupabaseServerClient } from '@/infrastructure/supabase/server';
 import {
   can,
   effectiveCapabilities,
+  hasRoleAtLeast,
   isManagement,
 } from '@/domain/access/capabilities';
 import { type Capability, type Role } from '@/lib/roles';
@@ -90,6 +91,13 @@ export async function requireSession(): Promise<SessionContext> {
 export async function requireManagement(): Promise<SessionContext> {
   const ctx = await requireSession();
   if (!isManagement(ctx.role)) redirect('/');
+  return ctx;
+}
+
+/** Require a manager (Regional Manager) or above — the "above-mobile" tier. */
+export async function requireManager(): Promise<SessionContext> {
+  const ctx = await requireSession();
+  if (!hasRoleAtLeast(ctx.role, 'manager')) redirect('/');
   return ctx;
 }
 

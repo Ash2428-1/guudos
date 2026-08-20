@@ -1,7 +1,10 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  experimental: {
+    // Work-order photo/PDF uploads are sent to the extract server action as base64.
+    serverActions: { bodySizeLimit: '12mb' },
+  },
 };
 
 export default nextConfig;
