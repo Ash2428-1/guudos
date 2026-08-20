@@ -1,9 +1,9 @@
 import Link from 'next/link';
-import { requireManager } from '@/services/auth/session';
+import { requireSession } from '@/services/auth/session';
 import { listMovementOrders } from '@/services/movement-orders/service';
 
 export default async function MovementOrdersPage() {
-  await requireManager();
+  await requireSession();
   const orders = await listMovementOrders();
 
   return (

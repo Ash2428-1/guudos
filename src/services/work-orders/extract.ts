@@ -1,6 +1,10 @@
 import 'server-only';
 import { EXTRACTION_MODEL, getAnthropic } from '@/infrastructure/ai/anthropic';
 import { type WorkOrderFields } from '@/lib/work-orders';
+import { docxToText } from '@/services/work-orders/docx';
+
+const DOCX_MEDIA =
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
 
 const EMPTY: WorkOrderFields = {
   clientName: null, skaeContact: null, clientApproval: null,
@@ -76,16 +80,29 @@ export async function extractWorkOrder(
   const client = getAnthropic();
   if (!client) return { ok: false, reason: 'not_configured' };
 
-  const doc =
-    mediaType === 'application/pdf'
-      ? { type: 'document' as const, source: { type: 'base64' as const, media_type: 'application/pdf' as const, data: base64 } }
-      : { type: 'image' as const, source: { type: 'base64' as const, media_type: mediaType as 'image/jpeg' | 'image/png' | 'image/webp', data: base64 } };
+  const isDocx =
+    mediaType === DOCX_MEDIA || mediaType === 'application/msword';
+
+  // Word docs aren't a native content block — unzip to text and send inline.
+  let docBlock:
+    | { type: 'document'; source: { type: 'base64'; media_type: 'application/pdf'; data: string } }
+    | { type: 'image'; source: { type: 'base64'; media_type: 'image/jpeg' | 'image/png' | 'image/webp'; data: string } }
+    | { type: 'text'; text: string };
+  if (isDocx) {
+    const text = docxToText(Buffer.from(base64, 'base64'));
+    if (!text) return { ok: false, reason: 'error', message: 'Could not read the Word document.' };
+    docBlock = { type: 'text', text: `WORK ORDER (from Word document):\n\n${text}` };
+  } else if (mediaType === 'application/pdf') {
+    docBlock = { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: base64 } };
+  } else {
+    docBlock = { type: 'image', source: { type: 'base64', media_type: mediaType as 'image/jpeg' | 'image/png' | 'image/webp', data: base64 } };
+  }
 
   try {
     const res = await client.messages.create({
       model: EXTRACTION_MODEL,
       max_tokens: 2000,
-      messages: [{ role: 'user', content: [doc, { type: 'text', text: PROMPT }] }],
+      messages: [{ role: 'user', content: [docBlock, { type: 'text', text: PROMPT }] }],
     });
     const text = res.content
       .map((c) => (c.type === 'text' ? c.text : ''))

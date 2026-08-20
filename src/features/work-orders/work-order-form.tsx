@@ -115,8 +115,7 @@ export function WorkOrderForm({
         </p>
         <input
           type="file"
-          accept="image/*,application/pdf"
-          capture="environment"
+          accept="image/*,application/pdf,.doc,.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
           disabled={extracting}
           onChange={(e) => {
             const file = e.target.files?.[0];

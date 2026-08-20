@@ -13,6 +13,7 @@ export function getAnthropic(): Anthropic | null {
   return client;
 }
 
-/** Model for document extraction (override via env). */
+/** Model for document extraction (override via env). Haiku is plenty for
+ *  structured field extraction and by far the cheapest per document. */
 export const EXTRACTION_MODEL =
-  process.env.ANTHROPIC_EXTRACTION_MODEL || 'claude-opus-4-8';
+  process.env.ANTHROPIC_EXTRACTION_MODEL || 'claude-haiku-4-5-20251001';

@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import { ChevronLeft } from 'lucide-react';
-import { notFound } from 'next/navigation';
-import { requireManager } from '@/services/auth/session';
+import { notFound, redirect } from 'next/navigation';
+import { requireSession } from '@/services/auth/session';
+import { hasRoleAtLeast } from '@/domain/access/capabilities';
 import { getMovementOrder } from '@/services/movement-orders/service';
 import { listAccessibleMobiles } from '@/services/locations/service';
 import { MovementOrderForm } from '@/features/movement-orders/movement-order-form';
@@ -13,8 +14,10 @@ export default async function MovementOrderPage({
   params: Promise<{ id: string }>;
   searchParams: Promise<{ saved?: string }>;
 }) {
-  await requireManager();
+  const ctx = await requireSession();
   const [{ id }, sp] = await Promise.all([params, searchParams]);
+  // On-mobile roles can view, but editing is a management action.
+  if (!hasRoleAtLeast(ctx.role, 'manager')) redirect(`/movement-orders/${id}/print`);
   const [mo, mobiles] = await Promise.all([getMovementOrder(id), listAccessibleMobiles()]);
   if (!mo) notFound();
 

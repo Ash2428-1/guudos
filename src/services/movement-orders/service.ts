@@ -1,5 +1,5 @@
 import 'server-only';
-import { requireManager } from '@/services/auth/session';
+import { requireManager, requireSession } from '@/services/auth/session';
 import { createSupabaseServerClient } from '@/infrastructure/supabase/server';
 import {
   type MovementLeg,
@@ -91,7 +91,7 @@ export async function createMovementFromWorkOrder(workOrderId: string): Promise<
 }
 
 export async function getMovementOrder(id: string): Promise<MovementOrderRow | null> {
-  await requireManager();
+  await requireSession(); // viewable on-mobile; RLS scopes to the org
   const supabase = await createSupabaseServerClient();
   const { data: mo } = await supabase.from('movement_orders').select('*').eq('id', id).maybeSingle();
   if (!mo) return null;
@@ -119,7 +119,7 @@ export interface MovementOrderSummary {
 }
 
 export async function listMovementOrders(): Promise<MovementOrderSummary[]> {
-  const ctx = await requireManager();
+  const ctx = await requireSession();
   const supabase = await createSupabaseServerClient();
   const { data } = await supabase
     .from('movement_orders')

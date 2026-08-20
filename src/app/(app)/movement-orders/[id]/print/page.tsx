@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { requireManager } from '@/services/auth/session';
+import { requireSession } from '@/services/auth/session';
 import { getMovementOrder } from '@/services/movement-orders/service';
 import { PrintButton } from '@/features/movement-orders/print-button';
 
@@ -24,7 +24,7 @@ export default async function MovementOrderPrintPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  await requireManager();
+  await requireSession();
   const { id } = await params;
   const mo = await getMovementOrder(id);
   if (!mo) notFound();
